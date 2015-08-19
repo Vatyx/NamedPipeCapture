@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NamedPipeCapture", "NamedPipeCapture\NamedPipeCapture.vcxproj", "{BD5DDC97-555D-4CB4-B8FA-25B68B841AF2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NamedPipeLauncher", "NamedPipeLauncher\NamedPipeLauncher.vcxproj", "{CB4EB410-FB87-493E-A349-FAE838BA7074}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BD5DDC97-555D-4CB4-B8FA-25B68B841AF2}.Debug|x64.ActiveCfg = Debug|x64
+		{BD5DDC97-555D-4CB4-B8FA-25B68B841AF2}.Debug|x64.Build.0 = Debug|x64
+		{BD5DDC97-555D-4CB4-B8FA-25B68B841AF2}.Debug|x86.ActiveCfg = Debug|Win32
+		{BD5DDC97-555D-4CB4-B8FA-25B68B841AF2}.Debug|x86.Build.0 = Debug|Win32
+		{BD5DDC97-555D-4CB4-B8FA-25B68B841AF2}.Release|x64.ActiveCfg = Release|x64
+		{BD5DDC97-555D-4CB4-B8FA-25B68B841AF2}.Release|x64.Build.0 = Release|x64
+		{BD5DDC97-555D-4CB4-B8FA-25B68B841AF2}.Release|x86.ActiveCfg = Release|Win32
+		{BD5DDC97-555D-4CB4-B8FA-25B68B841AF2}.Release|x86.Build.0 = Release|Win32
+		{CB4EB410-FB87-493E-A349-FAE838BA7074}.Debug|x64.ActiveCfg = Debug|x64
+		{CB4EB410-FB87-493E-A349-FAE838BA7074}.Debug|x64.Build.0 = Debug|x64
+		{CB4EB410-FB87-493E-A349-FAE838BA7074}.Debug|x86.ActiveCfg = Debug|Win32
+		{CB4EB410-FB87-493E-A349-FAE838BA7074}.Debug|x86.Build.0 = Debug|Win32
+		{CB4EB410-FB87-493E-A349-FAE838BA7074}.Release|x64.ActiveCfg = Release|x64
+		{CB4EB410-FB87-493E-A349-FAE838BA7074}.Release|x64.Build.0 = Release|x64
+		{CB4EB410-FB87-493E-A349-FAE838BA7074}.Release|x86.ActiveCfg = Release|Win32
+		{CB4EB410-FB87-493E-A349-FAE838BA7074}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://tfs:8080/tfs/osi
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = NamedPipeCapture\\NamedPipeCapture.vcxproj
+		SccProjectName1 = NamedPipeCapture
+		SccLocalPath1 = NamedPipeCapture
+		SccProjectUniqueName2 = NamedPipeLauncher\\NamedPipeLauncher.vcxproj
+		SccProjectName2 = NamedPipeLauncher
+		SccLocalPath2 = NamedPipeLauncher
+	EndGlobalSection
+EndGlobal
