@@ -22,6 +22,8 @@ struct globalStruct
    std::vector<std::thread> globalThreads;
    std::string targetName;
    std::string outputName;
+   unsigned short clientPort;
+   unsigned short serverPort;
    std::chrono::high_resolution_clock::time_point starttime;
    std::shared_ptr<::boost::asio::io_service> service;
    std::shared_ptr<::boost::asio::io_service::work> work_guard;

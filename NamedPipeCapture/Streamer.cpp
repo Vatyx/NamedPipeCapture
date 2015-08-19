@@ -1,9 +1,12 @@
 #include "Streamer.h"
+#include "Globals.h"
 #include "Buffer.h"
 #include "Writer.h"
 #include <strstream>
 #include <algorithm>
 #include <memory>
+
+globalStruct* _GetGlobals() { return globalStruct::GetGlobals(); }
 
 namespace StreamerTools
 {
@@ -95,11 +98,13 @@ void Streamer::streamBuffer(Writer& writer, Buffer& buff)
              case Action::READ:
                 IncrementRead(buf.second);
                 fdp.setIPs(SERVER_IP, CLIENT_IP);
+				fdp.setPorts(_GetGlobals()->serverPort, _GetGlobals()->clientPort);
                 fdp.setSeqAck(serverController.getSeq(), serverController.getAck());
                 break;
              case Action::WRITE:
                 IncrementWrite(buf.second);
                 fdp.setIPs(CLIENT_IP, SERVER_IP);
+				fdp.setPorts(_GetGlobals()->clientPort, _GetGlobals()->serverPort);
                 fdp.setSeqAck(clientController.getSeq(), clientController.getAck());
                 break;
              default:

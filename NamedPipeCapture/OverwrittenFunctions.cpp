@@ -37,6 +37,8 @@ struct InputStruct
 {
    char target[MAX_PATH];
    char output[MAX_PATH];
+   unsigned short clientPort;
+   unsigned short serverPort;
 };
 
 bool IsInitializedAndConnected()
@@ -197,6 +199,8 @@ __declspec(dllexport) DWORD WINAPI InitializeCaptureMethods(LPVOID inputstruct)
 
    tempGlobalObject->targetName = is->target;
    tempGlobalObject->outputName = is->output;
+   tempGlobalObject->clientPort = is->clientPort;
+   tempGlobalObject->serverPort = is->serverPort;
    tempGlobalObject->service = std::make_shared<::boost::asio::io_service>();
    tempGlobalObject->work_guard = std::make_shared<::boost::asio::io_service::work>(
        ::boost::ref(*tempGlobalObject->service));

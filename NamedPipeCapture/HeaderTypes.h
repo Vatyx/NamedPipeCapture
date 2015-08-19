@@ -214,6 +214,7 @@ namespace HeaderTypes
 		void setSize(unsigned int);
 		void setTime(std::chrono::high_resolution_clock::time_point);
 		void setIPs(unsigned int, unsigned int);
+		void setPorts(unsigned short, unsigned short);
 		void setSeqAck(unsigned int, unsigned int);
 
 		friend std::ostream& operator<<(std::ostream&, const FullDataPacket&);	

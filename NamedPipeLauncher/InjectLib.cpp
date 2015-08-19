@@ -202,6 +202,8 @@ struct InputStruct
 {
 	char target[MAX_PATH];
 	char output[MAX_PATH];
+	unsigned short clientPort;
+	unsigned short serverPort;
 };
 
 template<typename DATATYPE>
@@ -269,7 +271,7 @@ LPCVOID GetFunctionBody(LPVOID fcnptr)
 // returns 0 on success, or whatever the called function returns.
 // Perhaps caller & callee should return in different parameters:
 // e.g. the injection was successful but the call it made was not.
-DWORD WINAPI InitializeProcess(DWORD dwProcessId, const std::string& targetPipeName, const std::string& outputPipeName) {
+DWORD WINAPI InitializeProcess(DWORD dwProcessId, const std::string& targetPipeName, const std::string& outputPipeName, unsigned short client, unsigned short server) {
 
 	DWORD dwOk = -1; // Assume that the function fails
 	HANDLE hProcess = NULL, hThread = NULL;
@@ -342,6 +344,8 @@ DWORD WINAPI InitializeProcess(DWORD dwProcessId, const std::string& targetPipeN
 		memcpy(&LocalParam.fcnname, "InitializeCaptureMethods", sizeof("InitializeCaptureMethods"));
 		strcpy_s(LocalParam.data.data.output, outputPipeName.c_str());
 		strcpy_s(LocalParam.data.data.target, targetPipeName.c_str());
+		LocalParam.data.data.clientPort = client;
+		LocalParam.data.data.serverPort = server;
 		LocalParam.data.pGetLastError = reinterpret_cast<decltype(LocalParam.data.pGetLastError)>(iGetLastErrorAddress);
 		LocalParam.data.pGetModuleHandleA = reinterpret_cast<decltype(LocalParam.data.pGetModuleHandleA)>(iGetModAddress);
 		LocalParam.data.pGetProcAddress = reinterpret_cast<decltype(LocalParam.data.pGetProcAddress)>(iGetProcAddress);

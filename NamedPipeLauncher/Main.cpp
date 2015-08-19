@@ -32,7 +32,7 @@ int main(int ac, char* av[])
 			std::cout << "Inject Library routine failed." << std::endl;
 			return -1;
 		}
-		DWORD initResult = InitializeProcess(options.getProcessID(), options.getInputPipe(), options.getOutputPipe());
+		DWORD initResult = InitializeProcess(options.getProcessID(), options.getInputPipe(), options.getOutputPipe(), options.getClientPort(), options.getServerPort());
 
 		std::cout << "InitializeProcess returned " << initResult << '\n' <<
 			"Warning: Make certain the DLL is unloaded when the test is done. \n"
@@ -51,9 +51,11 @@ int main(int ac, char* av[])
 		break;
 	}
 
-	std::cout << "Input pipe:" << options.getInputPipe() << std::endl;
-	std::cout << "Output pipe:" << options.getOutputPipe() << std::endl;
-	std::cout << "Processid:" << options.getProcessID() << std::endl;
+	std::cout << "Input pipe: " << options.getInputPipe() << std::endl;
+	std::cout << "Output pipe: " << options.getOutputPipe() << std::endl;
+	std::cout << "Process ID: " << options.getProcessID() << std::endl;
+	std::cout << "Client port: " << options.getClientPort() << std::endl;
+	std::cout << "Server port: " << options.getServerPort() << std::endl;
 
 	return 0;
 }

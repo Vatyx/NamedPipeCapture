@@ -8,13 +8,13 @@ OptionHandler::OptionHandler()
 {
 	desc.add_options()
 		("help,h", "Produce Help Message")
-		("input,i", value<std::string>(&m_inputpipe), "Pipe to scan for")
-		("output,o", value<std::string>(&m_outputpipe), "Set Output Pipe")
+		("input,i", value<std::string>(&m_inputpipe), "Pipe to scan for (In the form \\[Pipe Name Here])")
+		("output,o", value<std::string>(&m_outputpipe), "Set Output Pipe (In the form \\\\.\\pipe\\[Pipe Name Here])")
 		("processid,p", value<DWORD>(&m_processid), "Set Process ID")
+		("clientport,c", value<unsigned short>(&m_clientPort), "Set Client Port (Default is 0)")
+		("serverport,s", value<unsigned short>(&m_serverPort), "Set Server Port (Default is 0)")
 		("load,l", "Load the application into the DLL")
 		("unload,u", "Unload the application into the DLL")
-		("start", "Start streaming")
-		("stop", "Stop streaming")
 		;
 }
 
@@ -85,10 +85,6 @@ bool OptionHandler::validate()
 
 void OptionHandler::help() { std::cout << desc << std::endl; }
 
-void OptionHandler::start() { std::cout << "In the start function" << std::endl; }
-
-void OptionHandler::stop() { std::cout << "In the stop function" << std::endl; }
-
 std::string OptionHandler::getInputPipe() { return m_inputpipe; }
 
 std::string OptionHandler::getOutputPipe() { return m_outputpipe; }
@@ -96,3 +92,7 @@ std::string OptionHandler::getOutputPipe() { return m_outputpipe; }
 DWORD OptionHandler::getProcessID() { return m_processid; }
 
 ACTION OptionHandler::getAction() { return m_action; }
+
+unsigned short OptionHandler::getClientPort() { return m_clientPort; }
+
+unsigned short OptionHandler::getServerPort() { return m_serverPort; }

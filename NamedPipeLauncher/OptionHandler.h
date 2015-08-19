@@ -27,14 +27,12 @@ public:
 	bool validate();
 
 	void help();
-	void load();
-	void unload();
-	void start();
-	void stop();
 
 	std::string getInputPipe();
 	std::string getOutputPipe();
 	DWORD getProcessID();
+	unsigned short getClientPort();
+	unsigned short getServerPort();
 	ACTION getAction();
 
 private:
@@ -43,6 +41,8 @@ private:
 	std::string m_inputpipe = "";
 	std::string m_outputpipe = "";
 	DWORD m_processid = 0;
+	unsigned short m_clientPort = 0;
+	unsigned short m_serverPort = 0;
 
 	ACTION m_action = NONE;
 };

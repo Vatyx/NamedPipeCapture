@@ -170,6 +170,12 @@ void FullDataPacket::setIPs(unsigned int src, unsigned int dest)
    ip.destIP = dest;
 }
 
+void FullDataPacket::setPorts(unsigned short src, unsigned short dest)
+{
+	tcp.srcPort = src;
+	tcp.destPort = dest;
+}
+
 void FullDataPacket::setSeqAck(unsigned int seq, unsigned int ack)
 {
    tcp.seqNum = seq;

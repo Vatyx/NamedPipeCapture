@@ -31,7 +31,8 @@ BOOL WINAPI InjectLibW(DWORD dwProcessId, PCWSTR pszLibFile);
 BOOL WINAPI InjectLibA(DWORD dwProcessId, PCSTR pszLibFile);
 BOOL WINAPI EjectLibW(DWORD dwProcessId, PCWSTR pszLibFile);
 BOOL WINAPI EjectLibA(DWORD dwProcessId, PCSTR pszLibFile);
-DWORD WINAPI InitializeProcess(DWORD dwProcessId, const std::string& targetPipeName, const std::string& outputPipeName);
+DWORD WINAPI InitializeProcess(DWORD dwProcessId, const std::string& targetPipeName, 
+	const std::string& outputPipeName, unsigned short clientPort, unsigned short serverPort);
 
 // Todo: add a field that tells us how large the BYTE array is after the char arrays
 // Note that the DATACLASS must be a built-in type or a self-contained struct.
