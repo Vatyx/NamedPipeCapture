@@ -48,3 +48,6 @@ Once the ``--load`` command has bee executed on a process, the data can be seen 
 5. Click Save and Close the window. (The error "The link type of interface [your pipe] was not specified" may pop up which is fine. Just close it.)
 6. The newly added named pipe should be listed along with other interfaces in the Capture Options window. Make sure the capture tick box is ticked and then click on start in the bottom right hand corner.
 ![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/manageinterfaces2.png)
+
+Data should now be streaming into Wireshark in real time and can be viewed
+![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/streaming1.png)
