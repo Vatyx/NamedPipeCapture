@@ -1,7 +1,7 @@
 #pragma once
 #ifndef _BUFFER_H_INCLUDED_
 #define _BUFFER_H_INCLUDED_
-
+//custom buffer class
 #include <chrono>
 #include <vector>
 #include <memory>
