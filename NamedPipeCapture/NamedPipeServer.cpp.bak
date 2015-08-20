@@ -34,16 +34,12 @@ void NamedPipeServer::Stop()
 {
    std::unique_lock<std::mutex> lg(m_mutex);
    m_isRunning = false;
-   m_connectionTest.clear();
    auto ec = boost::system::error_code(boost::asio::error::operation_aborted,
                                        boost::asio::error::get_system_category());
-   if (m_namedPipeConnectionNotification && m_namedPipeConnectionNotification->is_open())
-      m_namedPipeConnectionNotification->close(ec);
-   if (m_namedPipeHandle && m_namedPipeHandle->is_open())
-   {
-      ::DisconnectNamedPipe(m_namedPipeHandle->native_handle());
+   if (m_namedPipeHandle)
       m_namedPipeHandle->close(ec);
-   }
+   if (m_namedPipeConnectionNotification)
+      m_namedPipeConnectionNotification->close(ec);
 }
 
 void NamedPipeServer::Start(ConnectionInitFcn fcn, bool FirstTime)
@@ -52,6 +48,17 @@ void NamedPipeServer::Start(ConnectionInitFcn fcn, bool FirstTime)
    m_isRunning = true;
 
    auto tempPipeHandle = BuildNamedPipe(FirstTime);
+
+   // if (!m_namedPipeConnectionNotification)
+   //{
+   //   EventHandle SignalHandle(::CreateEvent(nullptr, false, false, nullptr));
+   //   if (!SignalHandle.IsValid())
+   //      throw std::bad_alloc(); // resource problem
+   //   m_namedPipeConnectionNotification =
+   //       std::make_shared<::boost::asio::windows::object_handle>(
+   //           *s_io_service, SignalHandle.ReleaseHandle());
+   //}
+
    auto pOvrLappedIO = std::make_shared<OVERLAPPED>();
    ZeroMemory(pOvrLappedIO.get(), sizeof(OVERLAPPED));
    // pOvrLappedIO->hEvent = m_namedPipeConnectionNotification->native_handle();

@@ -8,9 +8,7 @@
 
 void StartNamedPipeServer(globalStruct& globalObj)
 {
-   auto svr = globalObj.GetServer();
-
-   if (!svr)
+   if (!globalObj.server)
    {
       auto serverErrFcn = [](const ::boost::system::error_code& ec)
       {
@@ -25,20 +23,16 @@ void StartNamedPipeServer(globalStruct& globalObj)
 
       auto server = NamedPipeServer::Create(globalObj.service, globalObj.outputName,
                                             serverErrFcn);
-      std::shared_ptr<NamedPipeServer> cmpVal;
-      if (std::atomic_compare_exchange_strong(&globalObj.server, &cmpVal, server))
-      {
-         server->SetNamedPipeSecurity();
-      }
-      svr = globalObj.GetServer();
+
+      std::atomic_store(&globalObj.server, server);
+      globalObj.server->SetNamedPipeSecurity();
    }
 
    auto CnxnSuccess = [&](std::shared_ptr<NamedPipe> pipe)
    {
       ::InitCycle(pipe);
    };
-
-   svr->Start(CnxnSuccess, true);
+   globalObj.server->Start(CnxnSuccess, true);
 }
 
 void DoWrite(std::shared_ptr<NamedPipe>& pipe,
@@ -52,15 +46,11 @@ void DoWrite(std::shared_ptr<NamedPipe>& pipe,
 void StartRecv(const std::shared_ptr<NamedPipe>& pipe)
 {
    char* SomeBuffer = new char[1024];
-   std::weak_ptr<NamedPipe> wptr = pipe;
    ::boost::asio::async_read(
        pipe->GetHandle(), boost::asio::buffer(SomeBuffer, 1024),
-       [SomeBuffer, wptr](const boost::system::error_code& ec, std::size_t) mutable
+       [SomeBuffer](const boost::system::error_code& ec, std::size_t) mutable
        {
-          delete [] SomeBuffer;
-          auto sptr = wptr.lock();
-          if (!sptr)
-             return;
+          delete[] SomeBuffer;
           auto globals = globalStruct::GetGlobals();
           if (!globals)
              return;
@@ -73,11 +63,8 @@ void StartRecv(const std::shared_ptr<NamedPipe>& pipe)
              auto pipe = std::atomic_load(&globals->pipe);
              std::shared_ptr<NamedPipe> nullPipe;
              std::atomic_store(&globals->pipe, nullPipe);
-             sptr->Cleanup();
-             auto svr = globals->GetServer();
-             if (!svr)
-                return;
-             svr->Stop();
+             pipe->Cleanup();
+             globals->server->Stop();
              StartNamedPipeServer(*globals);
           }
        });
@@ -88,29 +75,14 @@ void InitCycle(std::shared_ptr<NamedPipe>& pipe)
    auto globals = globalStruct::GetGlobals();
    if (!globals)
       return;
-   auto svc = globals->GetService();
-   if (!svc)
-      return;
    std::atomic_store(&globals->pipe, pipe);
    StartRecv(pipe);
 
-   svc->post([pipe, globals]()
+   globals->service->post([pipe, globals]()
                           {
-                             if (!pipe || !pipe->IsConnected())
-                                return;
-                             auto strm = globals->GetStreamer();
-                             if (!strm)
-                                return;
-                             try
-                             {
-                                Writer MyWriter(pipe);
-                                strm->startStream(MyWriter);
-                                strm->stream(MyWriter);
-                             }
-                             catch (NamedPipeException& ex)
-                             {
-                                pipe->Cleanup();
-                             }
+                             Writer MyWriter(pipe);
+                             globals->streamer->startStream(MyWriter);
+                             globals->streamer->stream(MyWriter);
                           });
 }
 
@@ -119,42 +91,17 @@ void CleanUpEverything()
    auto glbl = globalStruct::GetGlobals();
    if (!glbl)
       return;
-
-   auto svr = glbl->GetServer();
-   if (svr)
-   {
-      svr->Stop();
-   }
-
-   auto strm = glbl->GetStreamer();
-   if (strm)
-   {
-      strm->stopStream();
-   }
-   auto pipe = glbl->GetPipe();
-   if (pipe)
-   {
-      pipe->Cleanup();
-   }
+   glbl->streamer->stopStream();
+   glbl->pipe->Cleanup();
+   glbl->pipe.reset();
+   if (glbl->server)
+      glbl->server->Stop();
+   glbl->server.reset();
    glbl->work_guard.reset();
-   auto svc = glbl->GetService();
-
-   glbl->ResetAllPointers();
-
-   svr.reset();
-   strm.reset();
-   pipe.reset();
-
-   if (svc && !svc->stopped())
-   {
-      svc->stop();
-   }
    std::for_each(glbl->globalThreads.begin(), glbl->globalThreads.end(),
                  [](decltype(*glbl->globalThreads.begin())& thr)
                  {
                     thr.join();
                  });
-   svc.reset();
-   glbl.reset();
-   globalStruct::nullifyGlobals();
+   glbl->service.reset();
 }

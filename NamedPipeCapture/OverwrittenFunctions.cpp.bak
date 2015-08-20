@@ -110,42 +110,40 @@ __declspec(dllexport) BOOL WINAPI
     m_ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead,
                LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
 {
-   auto glbl = GetGlobals();
-   if (glbl)
-   {
-      if (CheckHandle(hFile))
-      {
-         if (lpOverlapped != nullptr)
-         {
-            // Determine if this request will not be queued to the iocompletionport.
-            // If it is, we can't deal with it.
-            if ((*reinterpret_cast<UINT_PTR*>(&lpOverlapped->hEvent) & 1) != 1) 
-            {
-               std::unique_lock<std::mutex> lock(GetGlobals()->waitingMutex);
-               GetGlobals()->waitingData.push_back(std::make_pair(lpOverlapped, lpBuffer));
-            }
-         }
-         else
-         {
-            auto ret = ReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead,
-               lpOverlapped);
-            if (ret)
-            {
-               auto ptr = std::unique_ptr<char[]>(new char[nNumberOfBytesToRead]);
-               memcpy_s(ptr.get(), nNumberOfBytesToRead, lpBuffer, nNumberOfBytesToRead);
-               // send the pointer and the size into the buffer
-               StreamerTools::Buffer mybuf(std::move(ptr), nNumberOfBytesToRead,
-                  std::chrono::high_resolution_clock::now(),
-                  StreamerTools::Action::READ);
-               GetGlobals()->streamer->pushData(std::move(mybuf));
-            }
-            return ret;
-         }
-      }
-   }
 
-   return ReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead,
+	if (CheckHandle(hFile))
+	{
+		if (lpOverlapped != NULL)
+		{
+         // Determine if this request will not be queued to the iocompletionport.
+         // If it is, we can't deal with it.
+         if ((*reinterpret_cast<UINT_PTR*>(&lpOverlapped->hEvent) & 1) != 1) 
+         {
+            std::unique_lock<std::mutex> lock(GetGlobals()->waitingMutex);
+            GetGlobals()->waitingData.push_back(std::make_pair(lpOverlapped, lpBuffer));
+            return ReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead,
                lpOverlapped);
+         }
+		}
+		else
+		{
+			bool ret = ReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead,
+				lpOverlapped);
+			if (ret)
+			{
+				auto ptr = std::unique_ptr<char[]>(new char[nNumberOfBytesToRead]);
+				memcpy_s(ptr.get(), nNumberOfBytesToRead, lpBuffer, nNumberOfBytesToRead);
+				// send the pointer and the size into the buffer
+				StreamerTools::Buffer mybuf(std::move(ptr), nNumberOfBytesToRead,
+					std::chrono::high_resolution_clock::now(),
+					StreamerTools::Action::READ);
+				GetGlobals()->streamer->pushData(std::move(mybuf));
+			}
+			return ret;
+		}
+	}
+
+	return false;
 }
 
 __declspec(dllexport) BOOL WINAPI
@@ -174,34 +172,6 @@ __declspec(dllexport) BOOL WINAPI
    }
    return WriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten,
                     lpOverlapped);
-}
-
-
-LONG WINAPI InvalidReadExceptionFilter(PEXCEPTION_POINTERS pep) {
-
-   // handle all unexpected exceptions because we simply don't patch
-   // any module in that case
-   LONG lDisposition = EXCEPTION_CONTINUE_SEARCH;
-   if (pep->ExceptionRecord->ExceptionCode == 0xc0000005)
-      lDisposition = EXCEPTION_EXECUTE_HANDLER;
-   // Note: pep->ExceptionRecord->ExceptionCode has 0xc0000005 as a value
-
-   return(lDisposition);
-}
-
-bool SafeMemCpy(char* src, DWORD srcLen, char* dest, DWORD destbytes)
-{
-   bool retval = true;
-   __try
-   {
-      memcpy_s(src, srcLen, dest, destbytes);
-      // send the pointer and the size into the buffer
-   }
-   __except (InvalidReadExceptionFilter(GetExceptionInformation()))
-   {
-      retval = false;
-   }
-   return retval;
 }
 
 __declspec(dllexport) BOOL WINAPI
@@ -246,15 +216,12 @@ __declspec(dllexport) BOOL WINAPI
    }
 
    auto ptr = std::unique_ptr<char[]>(new char[*lpNumberOfBytes]);
-
-   if (SafeMemCpy(ptr.get(), *lpNumberOfBytes, static_cast<char*>(procData.second), *lpNumberOfBytes))
-   {
-      // send the pointer and the size into the buffer
-      StreamerTools::Buffer mybuf(std::move(ptr), *lpNumberOfBytes,
-         std::chrono::high_resolution_clock::now(),
-         StreamerTools::Action::READ);
-      glbl->streamer->pushData(std::move(mybuf));
-   }
+   memcpy_s(ptr.get(), *lpNumberOfBytes, procData.second, *lpNumberOfBytes);
+   // send the pointer and the size into the buffer
+   StreamerTools::Buffer mybuf(std::move(ptr), *lpNumberOfBytes,
+                               std::chrono::high_resolution_clock::now(),
+                               StreamerTools::Action::READ);
+   glbl->streamer->pushData(std::move(mybuf));
 
    return ret;
 }
@@ -291,7 +258,7 @@ __declspec(dllexport) DWORD WINAPI InitializeCaptureMethods(LPVOID inputstruct)
                                           auto ptr = globalStruct::GetGlobals();
                                           if (!ptr)
                                              return;
-                                          auto svc = ptr->GetService();
+                                          auto svc = ptr->service;
                                           if (!svc)
                                              return;
                                           svc->run();

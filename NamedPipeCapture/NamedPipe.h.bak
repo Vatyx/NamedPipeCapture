@@ -1,7 +1,6 @@
 #pragma once
 
 #include <boost/asio.hpp>
-#include <boost/system/error_code.hpp>
 #include <memory>
 #include <functional>
 #include <mutex>
@@ -9,43 +8,17 @@
 #include <string>
 #include <concurrent_queue.h>
 #include <Windows.h>
-#include <exception>
 
-class NamedPipeException : public std::exception
+class NamedPipe 
 {
-private:
-   NamedPipeException();
-public:
-   explicit NamedPipeException(const ::boost::system::error_code& val) : iCode(val) {}
-   virtual ~NamedPipeException() {}
 
-   NamedPipeException(const NamedPipeException& other)
-      : iCode(other.iCode)
-   {
-   }
-   NamedPipeException& operator=(const NamedPipeException& other)
-   {
-      iCode = other.iCode;
-   }
-   virtual char const * what() const throw()
-   {
-      return "Generic Named Pipe Exception";
-   }
-   ::boost::system::error_code GetCode() const { return iCode; }
-protected:
-   ::boost::system::error_code iCode;
-};
-
-class NamedPipe : public std::enable_shared_from_this<NamedPipe>
-{
-   struct HiddenType;
 public:
 	typedef std::function<void(const ::boost::system::error_code&)> ErrorHandler;
 	typedef ::boost::asio::windows::stream_handle BoostNamedPipeHandle;
 	//typedef std::function<void(uRStream)> ReceivedStreamHandlerProc;
 	//typedef std::function<void(uRStream, std::function<void()>)> ReceivedStreamHandler;
 
-	NamedPipe(const HiddenType&, BoostNamedPipeHandle&&);
+	NamedPipe(BoostNamedPipeHandle&&);
 
 	static std::shared_ptr<NamedPipe>
 		Create(BoostNamedPipeHandle&&);

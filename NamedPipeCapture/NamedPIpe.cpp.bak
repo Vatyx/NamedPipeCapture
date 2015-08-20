@@ -2,15 +2,14 @@
 #include <utility>
 #include "SmartHandle.h"
 
-struct NamedPipe::HiddenType {};
 std::shared_ptr<NamedPipe> NamedPipe::Create(BoostNamedPipeHandle&& pipe)
 {
-   return std::make_shared<NamedPipe>(HiddenType(), std::move(pipe));
+   return std::make_shared<NamedPipe>(std::move(pipe));
 }
 
 NamedPipe::~NamedPipe() { Cleanup(); }
 
-NamedPipe::NamedPipe(const HiddenType&, BoostNamedPipeHandle&& pipe)
+NamedPipe::NamedPipe(BoostNamedPipeHandle&& pipe)
    : m_isConnected(true)
    , m_sendErrorCB()
    , m_handle(std::move(pipe))
@@ -50,9 +49,9 @@ void NamedPipe::SendStream(std::pair<std::unique_ptr<char[]>, size_t> strmToSend
    ::boost::asio::write(
        m_handle, ::boost::asio::buffer(strmToSend.first.get(), strmToSend.second), ec);
 
-   if (ec)
+   if (ec && (ec != ::boost::asio::error::operation_aborted))
    {
-      throw NamedPipeException(ec);
+      // disconnect handler
    }
 }
 
