@@ -110,12 +110,24 @@ __declspec(dllexport) BOOL WINAPI
                LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
 {
 
-
-   if (CheckHandle(hFile))
-   {
-      std::unique_lock<std::mutex> lock(GetGlobals()->waitingMutex);
-      GetGlobals()->waitingData.push_back(std::make_pair(lpOverlapped, lpBuffer));
-   }
+	if (CheckHandle(hFile))
+	{
+		if (lpOverlapped != NULL)
+		{
+			std::unique_lock<std::mutex> lock(GetGlobals()->waitingMutex);
+			GetGlobals()->waitingData.push_back(std::make_pair(lpOverlapped, lpBuffer));
+		}
+		else
+		{
+			auto ptr = std::unique_ptr<char[]>(new char[nNumberOfBytesToRead]);
+			memcpy_s(ptr.get(), nNumberOfBytesToRead, lpBuffer, nNumberOfBytesToRead);
+			// send the pointer and the size into the buffer
+			StreamerTools::Buffer mybuf(std::move(ptr), nNumberOfBytesToRead,
+				std::chrono::high_resolution_clock::now(),
+				StreamerTools::Action::READ);
+			GetGlobals()->streamer->pushData(std::move(mybuf));
+		}
+	}
 
    return ReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead,
                    lpOverlapped);
