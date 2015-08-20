@@ -38,8 +38,13 @@ To stop the capture, run the `unload` command with the same process id
 Once the ``--load`` command has bee executed on a process, the data can be seen in real time through Wireshark
 
 1. Open up Wireshark and go to Capture -> Interfaces
+![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/interfaces1.png)
 2. Click on Options on the bottom of the Interfaces window
+![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/manageinterfaces1.png)
 3. Click on Manage Interfaces near the top right of the Capture Options window
+![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/createpipe1.png)
 4. Click on New on the left under the pipe tab and put the name of the output named pipe that was specified earlier
+![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/createpipe2.png)
 5. Click Save and Close the window. (The error "The link type of interface [your pipe] was not specified" may pop up which is fine. Just close it.)
 6. The newly added named pipe should be listed along with other interfaces in the Capture Options window. Make sure the capture tick box is ticked and then click on start in the bottom right hand corner.
+![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/manageinterfaces2.png)
