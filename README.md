@@ -1,5 +1,5 @@
 # NamedPipeCapture
-A Windows tool that can be used to stream data from named pipe between two other process to Wireshark
+A Windows tool that can be used to stream data from named pipe between two other process to Wireshark through a named pipe
 
 ## Installation 
 
@@ -8,7 +8,7 @@ Make sure NamedPipeLauncher.exe and NamedPipeCapturex64.dll is in the same direc
 
 ## Usage
 
-This tool is used through Windows Powershell. There are 3 mandatory parametrs, 2 optional parameters and 2 commands that can be used.
+There are 3 mandatory parametrs, 2 optional parameters and 2 commands that can be used.
 
 __Mandatory Parameters__  
 * __-\-input__ (shorthand __-i__): Specify the named pipe that will be captured (_Ex_: \myinputpipe)
