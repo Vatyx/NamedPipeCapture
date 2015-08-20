@@ -23,7 +23,7 @@ __Commands__
 * __-\-load__ (shorthand __-l__): Load the DLL into the targeted process and open the output named pipe
 * __-\-unload__ (shorthand __-u__): Unload the DLL from the application and close the output named pipe
 
-##### Example
+__Example__
 ```bash
 > NamedPipeCapture.exe --input \mynamedpipe --output \\.\pipe\myoutputpipe -processid 21457 -c 50 -s 51 --load
 ```  
@@ -33,3 +33,13 @@ To stop the capture, run the `unload` command with the same process id
 ```bash
 > NamedPipeCapture.exe -processid 21457 --unload
 ```  
+
+## Streaming Data (using Wireshark)
+Once the ``--load`` command has bee executed on a process, the data can be seen in real time through Wireshark
+
+1. Open up Wireshark and go to Capture -> Interfaces
+2. Click on Options on the bottom of the Interfaces window
+3. Click on Manage Interfaces near the top right of the Capture Options window
+4. Click on New on the left under the pipe tab and put the name of the output named pipe that was specified earlier
+5. Click Save and Close the window. (The error "The link type of interface [your pipe] was not specified" may pop up which is fine. Just close it.)
+6. The newly added named pipe should be listed along with other interfaces in the Capture Options window. Make sure the capture tick box is ticked and then click on start in the bottom right hand corner.
