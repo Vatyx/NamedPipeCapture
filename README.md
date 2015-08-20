@@ -49,5 +49,7 @@ Once the ``--load`` command has bee executed on a process, the data can be seen 
 6. The newly added named pipe should be listed along with other interfaces in the Capture Options window. Make sure the capture tick box is ticked and then click on start in the bottom right hand corner.
 ![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/manageinterfaces2.png)
 
-Data should now be streaming into Wireshark in real time and can be viewed
+Data should now be streaming into Wireshark in real time!
 ![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/streaming1.png)
+
+#Make sure Wireshark STOPS capturing data when the DLL is unloaded from the process
