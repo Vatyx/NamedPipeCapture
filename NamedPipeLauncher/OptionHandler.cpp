@@ -13,8 +13,8 @@ OptionHandler::OptionHandler()
 		("processid,p", value<DWORD>(&m_processid), "Set Process ID")
 		("clientport,c", value<unsigned short>(&m_clientPort), "Set Client Port (Default is 0)")
 		("serverport,s", value<unsigned short>(&m_serverPort), "Set Server Port (Default is 0)")
-		("load,l", "Load the application into the DLL")
-		("unload,u", "Unload the application into the DLL")
+		("load,l", "Load the DLL into the application and open the output named pipe")
+		("unload,u", "Unload the DLL from the application and close the output named pipe")
 		;
 }
 

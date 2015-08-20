@@ -35,16 +35,4 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 3
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = http://tfs:8080/tfs/osi
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = NamedPipeCapture\\NamedPipeCapture.vcxproj
-		SccProjectName1 = NamedPipeCapture
-		SccLocalPath1 = NamedPipeCapture
-		SccProjectUniqueName2 = NamedPipeLauncher\\NamedPipeLauncher.vcxproj
-		SccProjectName2 = NamedPipeLauncher
-		SccLocalPath2 = NamedPipeLauncher
-	EndGlobalSection
 EndGlobal
