@@ -5,6 +5,7 @@
 #include "boost/asio/error.hpp"
 #include "Writer.h"
 #include "Streamer.h"
+#include "FcnTracker.hxx"
 
 
 void StartNamedPipeServer(globalStruct& globalObj)
@@ -162,6 +163,11 @@ void CleanUpEverything()
                     thr.join();
                  });
    svc.reset();
+   auto trkr = glbl->GetTracker();
+   if (trkr)
+   {
+      trkr->WaitUntilThreadVecEmpty(std::chrono::minutes(10));
+   }
    glbl.reset();
    globalStruct::nullifyGlobals();
 }

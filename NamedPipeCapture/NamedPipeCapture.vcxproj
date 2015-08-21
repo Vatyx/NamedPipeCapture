@@ -149,6 +149,7 @@
     <ClCompile Include="APIHook.cpp" />
     <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="CaptureEngine.cpp" />
+    <ClCompile Include="FcnTracker.cpp" />
     <ClCompile Include="Globals.cpp" />
     <ClCompile Include="HeaderTypes.cpp" />
     <ClCompile Include="NamedPipe.cpp" />
@@ -162,10 +163,12 @@
     <ClInclude Include="CaptureEngine.h" />
     <ClInclude Include="CommonFiles\CmnHdr.h" />
     <ClInclude Include="CommonFiles\Toolhelp.h" />
+    <ClInclude Include="FcnTracker.hxx" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="HeaderTypes.h" />
     <ClInclude Include="NamedPipe.h" />
     <ClInclude Include="NamedPipeServer.h" />
+    <ClInclude Include="ScopeGuard.hxx" />
     <ClInclude Include="SeqAck.h" />
     <ClInclude Include="SmartHandle.h" />
     <ClInclude Include="Streamer.h" />

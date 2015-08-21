@@ -48,6 +48,9 @@
     <ClCompile Include="APIHook.cpp">
       <Filter>Source Files\API Hooking</Filter>
     </ClCompile>
+    <ClCompile Include="FcnTracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HeaderTypes.h">
@@ -88,6 +91,12 @@
     </ClInclude>
     <ClInclude Include="CommonFiles\CmnHdr.h">
       <Filter>API Hooking</Filter>
+    </ClInclude>
+    <ClInclude Include="FcnTracker.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScopeGuard.hxx">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,6 +3,7 @@
 #include <atomic>
 #include "NamedPipe.h"
 #include "NamedPipeServer.h"
+#include "FcnTracker.hxx"
 
 std::shared_ptr<globalStruct> globalStruct::globalObject = nullptr;
 
@@ -72,6 +73,11 @@ std::shared_ptr<NamedPipe> globalStruct::GetPipe()
    return std::atomic_load(&pipe);
 }
 
+std::shared_ptr<FunctionUsageTracker> globalStruct::GetTracker()
+{
+   return std::atomic_load(&fcnTracker);
+}
+
 void globalStruct::ResetAllPointers()
 {
    std::shared_ptr<StreamerTools::Streamer> resetStream;
@@ -82,6 +88,8 @@ void globalStruct::ResetAllPointers()
    std::atomic_store(&server, resetServer);
    std::shared_ptr<boost::asio::io_service> resetSvc;
    std::atomic_store(&service, resetSvc);
+   std::shared_ptr<FunctionUsageTracker> resetTracker;
+   std::atomic_store(&fcnTracker, resetTracker);
 }
 
 globalStruct::~globalStruct() {}

@@ -17,6 +17,8 @@
 #include "Buffer.h"
 #include "Globals.h"
 #include "CaptureEngine.h"
+#include "FcnTracker.hxx"
+#include "ScopeGuard.hxx"
 
 #include "APIHook.h"
 
@@ -113,6 +115,15 @@ __declspec(dllexport) BOOL WINAPI
    auto glbl = GetGlobals();
    if (glbl)
    {
+      auto fcnTrack = glbl->GetTracker();
+      if (fcnTrack)
+         fcnTrack->AddThreadBlocking(std::this_thread::get_id());
+      auto sg = ScopeGuard([&]
+      {
+         if (!fcnTrack)
+            return;
+         fcnTrack->RemoveThreadBlocking(std::this_thread::get_id());
+      });
       if (CheckHandle(hFile))
       {
          if (lpOverlapped != nullptr)
@@ -161,16 +172,36 @@ __declspec(dllexport) BOOL WINAPI
     m_WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite,
                 LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped)
 {
-   // Send lpBuffer and nNumberOfBytesToWrite to be pcapped formatted
-   if (IsInitializedAndConnected() && CheckHandle(hFile))
+   auto glbl = GetGlobals();
+   std::shared_ptr<FunctionUsageTracker> trkr;
+   if (glbl)
+      trkr = glbl->GetTracker();
+   if (trkr)
    {
-      auto ptr = std::unique_ptr<char[]>(new char[nNumberOfBytesToWrite]);
-      memcpy_s(ptr.get(), nNumberOfBytesToWrite, lpBuffer, nNumberOfBytesToWrite);
-      // send the pointer and the size into the buffer
-      StreamerTools::Buffer mybuf(std::move(ptr), nNumberOfBytesToWrite,
-                                  std::chrono::high_resolution_clock::now(),
-                                  StreamerTools::Action::WRITE);
-      GetGlobals()->streamer->pushData(std::move(mybuf));
+      trkr->AddThreadBlocking(std::this_thread::get_id());
+   }
+   auto sg = ScopeGuard([&]
+   {
+      if (!trkr)
+         return;
+      trkr->RemoveThreadBlocking(std::this_thread::get_id());
+   });
+   // Send lpBuffer and nNumberOfBytesToWrite to be pcapped formatted
+   if (CheckHandle(hFile))
+   {
+      std::shared_ptr<StreamerTools::Streamer> strm;
+      if (glbl)
+         strm = glbl->GetStreamer();
+      if (strm)
+      {
+         auto ptr = std::unique_ptr<char []>(new char[nNumberOfBytesToWrite]);
+         memcpy_s(ptr.get(), nNumberOfBytesToWrite, lpBuffer, nNumberOfBytesToWrite);
+         // send the pointer and the size into the buffer
+         StreamerTools::Buffer mybuf(std::move(ptr), nNumberOfBytesToWrite,
+            std::chrono::high_resolution_clock::now(),
+            StreamerTools::Action::WRITE);
+         strm->pushData(std::move(mybuf));
+      }
    }
    return WriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten,
                     lpOverlapped);
@@ -232,6 +263,20 @@ __declspec(dllexport) BOOL WINAPI
    if (!glbl)
       return ret;
 
+   std::shared_ptr<FunctionUsageTracker> trkr;
+   if (glbl)
+      trkr = glbl->GetTracker();
+   if (trkr)
+   {
+      trkr->AddThreadBlocking(std::this_thread::get_id());
+   }
+   auto sg = ScopeGuard([&]
+   {
+      if (!trkr)
+         return;
+      trkr->RemoveThreadBlocking(std::this_thread::get_id());
+   });
+
    std::pair<LPOVERLAPPED, LPVOID> procData;
 
    if (!glbl->FindAndEraseReadData(*lpOverlapped, procData))
@@ -274,6 +319,7 @@ __declspec(dllexport) DWORD WINAPI InitializeCaptureMethods(LPVOID inputstruct)
        ::boost::ref(*tempGlobalObject->service));
    tempGlobalObject->streamer = std::make_shared<StreamerTools::Streamer>();
    tempGlobalObject->starttime = std::chrono::high_resolution_clock::now();
+   tempGlobalObject->fcnTracker = std::make_shared<FunctionUsageTracker>();
 
    if (!globalStruct::InitGlobals(tempGlobalObject))
    {
