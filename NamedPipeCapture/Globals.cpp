@@ -88,8 +88,6 @@ void globalStruct::ResetAllPointers()
    std::atomic_store(&server, resetServer);
    std::shared_ptr<boost::asio::io_service> resetSvc;
    std::atomic_store(&service, resetSvc);
-   std::shared_ptr<FunctionUsageTracker> resetTracker;
-   std::atomic_store(&fcnTracker, resetTracker);
 }
 
 globalStruct::~globalStruct() {}

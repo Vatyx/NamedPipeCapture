@@ -249,20 +249,7 @@ __declspec(dllexport) BOOL WINAPI
                                 PULONG_PTR lpCompletionKey,
                                 LPOVERLAPPED* lpOverlapped, DWORD dwMilliseconds)
 {
-   BOOL ret =
-       GetQueuedCompletionStatus(CompletionPort, lpNumberOfBytes, lpCompletionKey,
-                                 lpOverlapped, dwMilliseconds);
-
-   if (*lpOverlapped == nullptr)
-      return ret;
-
-   if (!IsInitializedAndConnected())
-      return ret;
-
    auto glbl = globalStruct::GetGlobals();
-   if (!glbl)
-      return ret;
-
    std::shared_ptr<FunctionUsageTracker> trkr;
    if (glbl)
       trkr = glbl->GetTracker();
@@ -276,6 +263,12 @@ __declspec(dllexport) BOOL WINAPI
          return;
       trkr->RemoveThreadBlocking(std::this_thread::get_id());
    });
+
+   BOOL ret =
+       GetQueuedCompletionStatus(CompletionPort, lpNumberOfBytes, lpCompletionKey,
+                                 lpOverlapped, dwMilliseconds);
+   if (!glbl || (*lpOverlapped == nullptr) || !IsInitializedAndConnected())
+      return ret;
 
    std::pair<LPOVERLAPPED, LPVOID> procData;
 
@@ -365,7 +358,6 @@ __declspec(dllexport) DWORD WINAPI DoCleanup()
    delete g_pReadFile;
    delete g_pWriteFile;
    delete g_pGetQueuedCompletionStatus;
-   std::this_thread::sleep_for(std::chrono::seconds(30)); // TODO: create a signaling mechanism to make certain that all threads are out of the functions for our dll
    CleanUpEverything();
    return 0;
 }

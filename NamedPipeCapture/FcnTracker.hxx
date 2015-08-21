@@ -21,6 +21,8 @@ public:
    void WaitUntilThreadVecEmpty(const std::chrono::duration<Rep, PeriodType>& duration)
    {
       std::unique_lock<std::mutex> ul(m_Lock);
+      if (m_ThreadsInUse.empty())
+         return;
       m_SignalCheck = true;
       m_Signal.wait_for(ul, duration, [this]
       {

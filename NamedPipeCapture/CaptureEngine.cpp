@@ -167,6 +167,10 @@ void CleanUpEverything()
    if (trkr)
    {
       trkr->WaitUntilThreadVecEmpty(std::chrono::minutes(10));
+      trkr.reset();
+      std::shared_ptr<FunctionUsageTracker> resetTracker;
+      std::atomic_store(&glbl->fcnTracker, resetTracker);
+      std::this_thread::sleep_for(std::chrono::seconds(10)); // Wait some time for threads to exit
    }
    glbl.reset();
    globalStruct::nullifyGlobals();
