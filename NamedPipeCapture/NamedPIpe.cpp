@@ -12,20 +12,19 @@ NamedPipe::~NamedPipe() { Cleanup(); }
 
 NamedPipe::NamedPipe(const HiddenType&, BoostNamedPipeHandle&& pipe)
    : m_isConnected(true)
-   , m_sendErrorCB()
    , m_handle(std::move(pipe))
    , m_sendsInProgress(0)
    , m_sendThreadActive(false)
-   , m_cleanupActive(false)
+   , m_cleanupActive()
 {
+   m_cleanupActive.clear();
 }
 
 bool NamedPipe::IsConnected() const { return m_isConnected; }
 
 void NamedPipe::Cleanup()
 {
-   bool expected = false;
-   if (!m_cleanupActive.compare_exchange_strong(expected, true))
+   if (m_cleanupActive.test_and_set())
       return;
    ServerCleanup();
 }

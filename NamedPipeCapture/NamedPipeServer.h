@@ -38,8 +38,9 @@ public:
    ~NPsecurityattributes();
 };
 
-class NamedPipeServer
+class NamedPipeServer : public std::enable_shared_from_this<NamedPipeServer>
 {
+   struct HiddenStruct;
 public:
    typedef std::function<void(std::shared_ptr<NamedPipe>)> ConnectionInitFcn;
    typedef std::function<void(const ::boost::system::error_code&)> ErrorHandler;
@@ -48,7 +49,7 @@ public:
    static std::shared_ptr<NamedPipeServer>
    Create(std::shared_ptr<boost::asio::io_service> io, std::string pipename,
           ErrorHandler errfcn);
-   NamedPipeServer(std::shared_ptr<boost::asio::io_service> io, std::string pipename,
+   NamedPipeServer(const HiddenStruct&, std::shared_ptr<boost::asio::io_service> io, std::string pipename,
                    ErrorHandler errfcn,
                    NPsecurityattributes secattr = NPsecurityattributes()),
 

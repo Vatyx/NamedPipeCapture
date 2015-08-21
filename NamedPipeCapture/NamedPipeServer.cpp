@@ -3,7 +3,12 @@
 #include <AccCtrl.h>
 #include <AclAPI.h>
 
-NamedPipeServer::NamedPipeServer(std::shared_ptr<boost::asio::io_service> io,
+struct NamedPipeServer::HiddenStruct
+{
+};
+
+NamedPipeServer::NamedPipeServer(const HiddenStruct&,
+                                 std::shared_ptr<boost::asio::io_service> io,
                                  std::string pipename, ErrorHandler errfcn,
                                  NPsecurityattributes secattr)
    : s_io_service(std::move(io))
@@ -22,8 +27,8 @@ std::shared_ptr<NamedPipeServer>
 NamedPipeServer::Create(std::shared_ptr<boost::asio::io_service> io,
                         std::string pipename, ErrorHandler errfcn)
 {
-   return std::make_shared<NamedPipeServer>(std::move(io), std::move(pipename),
-                                            std::move(errfcn));
+   return std::make_shared<NamedPipeServer>(HiddenStruct(), std::move(io),
+                                            std::move(pipename), std::move(errfcn));
 }
 
 NamedPipeServer::~NamedPipeServer() { Stop(); }
@@ -37,7 +42,8 @@ void NamedPipeServer::Stop()
    m_connectionTest.clear();
    auto ec = boost::system::error_code(boost::asio::error::operation_aborted,
                                        boost::asio::error::get_system_category());
-   if (m_namedPipeConnectionNotification && m_namedPipeConnectionNotification->is_open())
+   if (m_namedPipeConnectionNotification &&
+       m_namedPipeConnectionNotification->is_open())
       m_namedPipeConnectionNotification->close(ec);
    if (m_namedPipeHandle && m_namedPipeHandle->is_open())
    {
@@ -59,17 +65,21 @@ void NamedPipeServer::Start(ConnectionInitFcn fcn, bool FirstTime)
    m_namedPipeHandle = std::make_shared<NamedPipe::BoostNamedPipeHandle>(
        *s_io_service, tempPipeHandle.ReleaseHandle());
 
-   InitNamedPipeConnect(*pOvrLappedIO, [=](const boost::system::error_code& ec)
-                        {
-                           HandleNewConnection(ec, pOvrLappedIO, std::move(fcn));
-                        });
+   std::weak_ptr<NamedPipeServer> wptr = shared_from_this();
+   InitNamedPipeConnect(
+       *pOvrLappedIO, [wptr, pOvrLappedIO, fcn](const boost::system::error_code& ec)
+       {
+          auto sptr = wptr.lock();
+          if (!sptr)
+             return;
+          sptr->HandleNewConnection(ec, pOvrLappedIO, std::move(fcn));
+       });
 }
 
 void NamedPipeServer::HandleNewConnection(const boost::system::error_code& ec,
                                           std::shared_ptr<OVERLAPPED> pOverlapped,
                                           ConnectionInitFcn successCBfunc)
 {
-
    DWORD testerr = 0;
    std::unique_lock<std::mutex> lg(m_mutex);
    if (!m_isRunning)
@@ -130,14 +140,12 @@ bool NamedPipeServer::SetNamedPipeSecurity()
 
    ZeroMemory(&ea, 3 * sizeof(EXPLICIT_ACCESS));
 
-   // All of this stuff is for PLI 17490OSI8, in order to prevent network access to
-   // the named pipe.
+   // Prevent network access to the named pipe.
    if (!AllocateAndInitializeSid(&SIDAuthWorld, 1, SECURITY_WORLD_RID, 0, 0, 0, 0, 0,
                                  0, 0, &pEveryoneSID))
    {
       return false;
    }
-
 
    ea[0].grfAccessPermissions = GENERIC_READ | GENERIC_WRITE;
    ea[0].grfAccessMode = SET_ACCESS;
@@ -159,23 +167,6 @@ bool NamedPipeServer::SetNamedPipeSecurity()
    ea[1].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
    ea[1].Trustee.ptstrName = (LPTSTR)pLocalSID;
 
-
-   // if (!IsWindowsVistaOrGreater())
-   //{
-   //   if (!AllocateAndInitializeSid(
-   //      &SIDAuthNT, 1, SECURITY_NETWORK_RID, 0, 0, 0, 0, 0, 0, 0, &pNetworkSID))
-   //   {
-   //      return PIstatus::PI_ERROR;
-   //   }
-
-   //   ea[2].grfAccessPermissions = GENERIC_ALL;
-   //   ea[2].grfAccessMode = DENY_ACCESS;
-   //   ea[2].grfInheritance = NO_INHERITANCE;
-   //   ea[2].Trustee.TrusteeForm = TRUSTEE_IS_SID;
-   //   ea[2].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
-   //   ea[2].Trustee.ptstrName = (LPTSTR) pNetworkSID;
-   //   ++numACE;
-   //}
 
    dwRes = SetEntriesInAcl(numACE, ea, nullptr, &pACL);
    if (dwRes != ERROR_SUCCESS)
@@ -210,15 +201,16 @@ bool NamedPipeServer::SetNamedPipeSecurity()
 NamedPipeHandle NamedPipeServer::BuildNamedPipe(bool isInitial)
 {
    INT32 openmode = PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED;
-   //if (isInitial)
+   // Do one client at a time.
+   // if (isInitial)
    //   openmode |= FILE_FLAG_FIRST_PIPE_INSTANCE;
 
    INT32 pipemode = PIPE_TYPE_MESSAGE | PIPE_WAIT;
 
    INT32 timeout = 5000;
-   auto pipehnd1 = NamedPipeHandle(::CreateNamedPipe(
-       m_pipeName.c_str(), openmode, pipemode, 1,
-       m_bufferSizeBytes, m_bufferSizeBytes, 300, NULL));
+   auto pipehnd1 = NamedPipeHandle(::CreateNamedPipe(m_pipeName.c_str(), openmode,
+                                                     pipemode, 1, m_bufferSizeBytes,
+                                                     m_bufferSizeBytes, 300, NULL));
    if (!pipehnd1.IsValid())
    {
       DWORD dwLastError = ::GetLastError();
@@ -270,7 +262,6 @@ void NamedPipeServer::InitNamedPipeConnect(OVERLAPPED& overlappedIO,
       m_namedPipeConnectionNotification->async_wait(std::move(fcn));
    }
 }
-
 
 NPsecurityattributes::NPsecurityattributes(
     std::shared_ptr<SECURITY_DESCRIPTOR> pDescriptor, BOOL bInherit,
@@ -335,13 +326,8 @@ NPsecurityattributes::NPsecurityattributes(NPsecurityattributes&& other)
    other.m_secattr = SECURITY_ATTRIBUTES();
 }
 
-
 NPsecurityattributes& NPsecurityattributes::operator=(NPsecurityattributes&& other)
 {
-   // TODO: remove the following line when we figure out a better accessor for this
-   // class
-   // than the casts to LPSECURITY_ATTRIBUTES and overloaded adderss-of
-
    if (&other != *this)
    {
       memset(&m_secattr, 0, sizeof(m_secattr));

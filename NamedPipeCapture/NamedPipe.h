@@ -40,10 +40,7 @@ class NamedPipe : public std::enable_shared_from_this<NamedPipe>
 {
    struct HiddenType;
 public:
-	typedef std::function<void(const ::boost::system::error_code&)> ErrorHandler;
 	typedef ::boost::asio::windows::stream_handle BoostNamedPipeHandle;
-	//typedef std::function<void(uRStream)> ReceivedStreamHandlerProc;
-	//typedef std::function<void(uRStream, std::function<void()>)> ReceivedStreamHandler;
 
 	NamedPipe(const HiddenType&, BoostNamedPipeHandle&&);
 
@@ -66,14 +63,13 @@ private:
 	bool m_isEstablished; // Indicates that the protocol exchanges have completed.
 	std::string m_endpoint;
 
-	ErrorHandler m_sendErrorCB;
-	::boost::asio::windows::stream_handle m_handle;
+   BoostNamedPipeHandle m_handle;
 
 	std::mutex m_mutex;
 
 	std::atomic<unsigned int> m_sendsInProgress;
 	std::atomic<bool> m_sendThreadActive;
-	std::atomic<bool> m_cleanupActive;
+	std::atomic_flag m_cleanupActive;
 	std::function<void(void)> m_cleanupFcn;
 	
 };

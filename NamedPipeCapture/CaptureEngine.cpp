@@ -4,6 +4,7 @@
 #include "NamedPipe.h"
 #include "boost/asio/error.hpp"
 #include "Writer.h"
+#include "Streamer.h"
 
 
 void StartNamedPipeServer(globalStruct& globalObj)
@@ -33,8 +34,10 @@ void StartNamedPipeServer(globalStruct& globalObj)
       svr = globalObj.GetServer();
    }
 
-   auto CnxnSuccess = [&](std::shared_ptr<NamedPipe> pipe)
+   auto CnxnSuccess = [](std::shared_ptr<NamedPipe> pipe)
    {
+      if (!pipe || !pipe->IsConnected())
+         return;
       ::InitCycle(pipe);
    };
 
@@ -44,7 +47,7 @@ void StartNamedPipeServer(globalStruct& globalObj)
 void DoWrite(std::shared_ptr<NamedPipe>& pipe,
              std::pair<std::unique_ptr<char[]>, size_t> thingToWrite)
 {
-   if (!pipe->IsConnected())
+   if (!pipe || !pipe->IsConnected())
       return;
    pipe->SendStream(std::move(thingToWrite));
 }
@@ -68,8 +71,11 @@ void StartRecv(const std::shared_ptr<NamedPipe>& pipe)
                                                                    // responsible for
                                                                    // this.
           {
-             globals->streamer->stopStream();
+             auto strm = globals->GetStreamer();
+             if (strm)
+                strm->stopStream();
              // restart the server
+
              auto pipe = std::atomic_load(&globals->pipe);
              std::shared_ptr<NamedPipe> nullPipe;
              std::atomic_store(&globals->pipe, nullPipe);
@@ -78,6 +84,7 @@ void StartRecv(const std::shared_ptr<NamedPipe>& pipe)
              if (!svr)
                 return;
              svr->Stop();
+             globals->ClearReadCollection();
              StartNamedPipeServer(*globals);
           }
        });

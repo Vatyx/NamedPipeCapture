@@ -4,8 +4,6 @@
 #include <memory>
 #include <utility>
 
-#include "Streamer.h"
-
 class Writer
 {
 public:
