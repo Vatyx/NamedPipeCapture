@@ -245,7 +245,7 @@ void arbitrarycodecall_end(void) {}
 LPCVOID GetFunctionBody(LPVOID fcnptr)
 {
 	//#ifndef WIN64
-//#if ( !defined (WIN64) && defined( _DEBUG ) ) || ( defined (WIN64) && !defined(_DEBUG) )
+#if ( !defined (_WIN64) && defined( _DEBUG ) ) || ( defined (_WIN64) && defined(_DEBUG) )
 
 	LPCVOID pLocation = NULL;
 	// fcnptr takes us to a jump table under this preproc scope. Parse out the jmp instruction, and extract the offset
@@ -262,10 +262,10 @@ LPCVOID GetFunctionBody(LPVOID fcnptr)
 	std::cout << "fcnptr = " << std::hex << pLocation << std::dec << std::endl;
 	return pLocation;
 	//#endif
-//#else
+#else
 	//std::cout << "fcnptr = " << std::hex << fcnptr << std::dec << std::endl;
 	return fcnptr;
-//#endif
+#endif
 }
 
 // returns 0 on success, or whatever the called function returns.
@@ -396,6 +396,126 @@ DWORD WINAPI InitializeProcess(DWORD dwProcessId, const std::string& targetPipeN
 	return(dwOk);
 }
 
+DWORD WINAPI CleanUpEverything(DWORD dwProcessId)
+{
 
+   DWORD dwOk = -1; // Assume that the function fails
+   HANDLE hProcess = NULL, hThread = NULL;
+   LPVOID pCodeCopy = NULL, pDataCopy = NULL;
+   INT_PTR iGetModAddress = NULL, iGetProcAddress = NULL, iGetLastErrorAddress = NULL;
+
+   BYTE *pThisCodePtr = NULL;
+
+   __try {
+      // Get a handle for the target process.
+      hProcess = OpenProcess(
+         PROCESS_QUERY_INFORMATION |   // Required by Alpha
+         PROCESS_CREATE_THREAD |   // For CreateRemoteThread
+         PROCESS_VM_OPERATION |   // For VirtualAllocEx/VirtualFreeEx
+         PROCESS_VM_WRITE |             // For WriteProcessMemory
+         PROCESS_VM_READ,
+         FALSE, dwProcessId);
+      if (hProcess == NULL)
+      {
+         dwOk = ::GetLastError();
+         __leave;
+      }
+
+      LPCVOID pLocation = NULL;
+      LPCVOID pEndLoc = NULL;
+
+      pLocation = GetFunctionBody(arbitrarycodecall);
+      if (pLocation == NULL) __leave;
+
+      pEndLoc = GetFunctionBody(arbitrarycodecall_end);
+      SIZE_T fcnsize = (INT_PTR) pEndLoc - (INT_PTR) pLocation;
+
+      pCodeCopy = VirtualAllocEx(hProcess, NULL, fcnsize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+      if (pCodeCopy == NULL) __leave;
+
+      HMODULE hKernel = GetModuleHandle(TEXT("Kernel32"));
+      if (hKernel == NULL) __leave;
+      iGetModAddress = (INT_PTR) GetProcAddress(hKernel, "GetModuleHandleA");
+      iGetProcAddress = (INT_PTR) GetProcAddress(hKernel, "GetProcAddress");
+      iGetLastErrorAddress = (INT_PTR) GetProcAddress(hKernel, "GetLastError");
+
+      if (iGetModAddress == 0 ||
+         iGetProcAddress == 0 ||
+         iGetLastErrorAddress == 0)
+         __leave;
+
+      // Copy the function code into our internal buffer
+      pThisCodePtr = new BYTE[fcnsize];
+      memcpy((void*) (pThisCodePtr), pLocation, fcnsize);
+
+      // Patch the buffer with the right memory addresses
+      // This is different in debug vs. release, since the dword ptr for pvoid is addressed
+      // slightly different in these compile modes.
+      // TODO: Make the code cave into a static byte array, different on X64 and X86. If you do this,
+      // you can reduce from 4 different address writes down to 2.
+
+      // Write out our code cave to the remote process
+      if (!WriteProcessMemory(hProcess, pCodeCopy,
+         (LPCVOID) (pThisCodePtr), fcnsize, NULL)) __leave;
+
+      AccessParam<DataPage<DWORD>> LocalParam;
+
+      //INJPARAM<DWORD> LocalParam;
+
+#ifndef WIN64
+      memcpy(&LocalParam.libname, "NamedPipeCapture.DLL", sizeof("NamedPipeCapture.DLL"));
+#else
+      memcpy(&LocalParam.libname, "NamedPipeCapturex64.DLL", sizeof("NamedPipeCapturex64.DLL"));
+#endif
+      memcpy(&LocalParam.fcnname, "DoCleanup", sizeof("DoCleanup"));
+      LocalParam.data.pGetLastError = reinterpret_cast<decltype(LocalParam.data.pGetLastError)>(iGetLastErrorAddress);
+      LocalParam.data.pGetModuleHandleA = reinterpret_cast<decltype(LocalParam.data.pGetModuleHandleA)>(iGetModAddress);
+      LocalParam.data.pGetProcAddress = reinterpret_cast<decltype(LocalParam.data.pGetProcAddress)>(iGetProcAddress);
+
+      // Setup our data memory block
+      pDataCopy = VirtualAllocEx(hProcess, NULL, sizeof(LocalParam), MEM_COMMIT, PAGE_READWRITE);
+      if (pDataCopy == NULL) __leave;
+
+      if (!WriteProcessMemory(hProcess, pDataCopy,
+         (LPVOID) &LocalParam.base(), sizeof(LocalParam.base()), NULL)) __leave;
+
+      hThread = CreateRemoteThread(hProcess, NULL, 0,
+         (PTHREAD_START_ROUTINE) pCodeCopy, pDataCopy, 0, NULL);
+
+      if (hThread == NULL)
+      {
+         dwOk = ::GetLastError();
+         __leave;
+      }
+
+      // Wait for the remote thread to terminate
+      WaitForSingleObject(hThread, INFINITE);
+
+      GetExitCodeThread(hThread, &dwOk);
+   }
+   __finally { // Now, we can clean everything up
+
+               // Free the remote memory that contained the DLL's pathname
+      if (pCodeCopy != NULL)
+         VirtualFreeEx(hProcess, pCodeCopy, 0, MEM_RELEASE);
+
+      if (pDataCopy != NULL)
+         VirtualFreeEx(hProcess, pDataCopy, 0, MEM_RELEASE);
+
+      // close handles to the thread & process
+
+      if (hThread != NULL)
+         CloseHandle(hThread);
+
+      if (hProcess != NULL)
+         CloseHandle(hProcess);
+
+      if (pThisCodePtr != NULL)
+         delete [] pThisCodePtr;
+
+   }
+
+   return(dwOk);
+}
 
 //////////////////////////////// End of File //////////////////////////////////

@@ -41,6 +41,10 @@ int main(int ac, char* av[])
 		break;
 	}
 	case UNLOAD:
+      if (!CleanUpEverything(options.getProcessID()))
+      {
+         std::cout << "Cleanup failed. Was the library loaded?\n";
+      }
 		if (!EjectLib(options.getProcessID(), (PCWSTR)(szLibFile)))
 		{
 			std::cout << "Library eject failed!\n";
