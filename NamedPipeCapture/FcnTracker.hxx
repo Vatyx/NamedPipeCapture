@@ -15,8 +15,8 @@ public:
    FunctionUsageTracker(const FunctionUsageTracker&) = delete;
    FunctionUsageTracker(FunctionUsageTracker&&) = delete;
    ~FunctionUsageTracker();
-   void AddThreadBlocking(const std::thread::id& id);
-   void RemoveThreadBlocking(const std::thread::id& id);
+   void EnterBlockingState(const std::thread::id& id);
+   void LeaveBlockingState(const std::thread::id& id);
    template<typename Rep, typename PeriodType>
    void WaitUntilThreadVecEmpty(const std::chrono::duration<Rep, PeriodType>& duration)
    {
@@ -25,6 +25,17 @@ public:
          return;
       m_SignalCheck = true;
       m_Signal.wait_for(ul, duration, [this]
+      {
+         return !m_SignalCheck;
+      });
+   }
+   void WaitUntilThreadVecEmpty()
+   {
+      std::unique_lock<std::mutex> ul(m_Lock);
+      if (m_ThreadsInUse.empty())
+         return;
+      m_SignalCheck = true;
+      m_Signal.wait(ul, [this]
       {
          return !m_SignalCheck;
       });

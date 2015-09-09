@@ -117,12 +117,12 @@ __declspec(dllexport) BOOL WINAPI
    {
       auto fcnTrack = glbl->GetTracker();
       if (fcnTrack)
-         fcnTrack->AddThreadBlocking(std::this_thread::get_id());
+         fcnTrack->EnterBlockingState(std::this_thread::get_id());
       auto sg = ScopeGuard([&]
       {
          if (!fcnTrack)
             return;
-         fcnTrack->RemoveThreadBlocking(std::this_thread::get_id());
+         fcnTrack->LeaveBlockingState(std::this_thread::get_id());
       });
       if (CheckHandle(hFile))
       {
@@ -135,6 +135,8 @@ __declspec(dllexport) BOOL WINAPI
                std::unique_lock<std::mutex> lock(GetGlobals()->waitingMutex);
                GetGlobals()->waitingData.push_back(std::make_pair(lpOverlapped, lpBuffer));
             }
+            return ReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead,
+               lpOverlapped);
          }
          else
          {
@@ -178,13 +180,13 @@ __declspec(dllexport) BOOL WINAPI
       trkr = glbl->GetTracker();
    if (trkr)
    {
-      trkr->AddThreadBlocking(std::this_thread::get_id());
+      trkr->EnterBlockingState(std::this_thread::get_id());
    }
    auto sg = ScopeGuard([&]
    {
       if (!trkr)
          return;
-      trkr->RemoveThreadBlocking(std::this_thread::get_id());
+      trkr->LeaveBlockingState(std::this_thread::get_id());
    });
    // Send lpBuffer and nNumberOfBytesToWrite to be pcapped formatted
    if (CheckHandle(hFile))
@@ -255,13 +257,13 @@ __declspec(dllexport) BOOL WINAPI
       trkr = glbl->GetTracker();
    if (trkr)
    {
-      trkr->AddThreadBlocking(std::this_thread::get_id());
+      trkr->EnterBlockingState(std::this_thread::get_id());
    }
    auto sg = ScopeGuard([&]
    {
       if (!trkr)
          return;
-      trkr->RemoveThreadBlocking(std::this_thread::get_id());
+      trkr->LeaveBlockingState(std::this_thread::get_id());
    });
 
    BOOL ret =

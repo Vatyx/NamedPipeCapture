@@ -166,7 +166,7 @@ void CleanUpEverything()
    auto trkr = glbl->GetTracker();
    if (trkr)
    {
-      trkr->WaitUntilThreadVecEmpty(std::chrono::minutes(10));
+      trkr->WaitUntilThreadVecEmpty();
       trkr.reset();
       std::shared_ptr<FunctionUsageTracker> resetTracker;
       std::atomic_store(&glbl->fcnTracker, resetTracker);
