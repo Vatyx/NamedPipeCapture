@@ -8,7 +8,7 @@ Make sure NamedPipeLauncher.exe and NamedPipeCapturex64.dll is in the same direc
 
 ## Usage
 
-There are 3 mandatory parametrs, 2 optional parameters and 2 commands that can be used.
+There are 3 mandatory parameters, 2 optional parameters and 2 commands that can be used.
 
 __Mandatory Parameters__  
 * __-\-input__ (shorthand __-i__): Specify the named pipe that will be captured (_Ex_: \myinputpipe)
@@ -16,7 +16,7 @@ __Mandatory Parameters__
 * __-\-processid__ (shorthand __-p__): Specify the process whose functions will be overwritten
 
 __Optional Parameters__  
-* __-\-clientport__ (shorthand __-c__): Specify the port that will represent the process that was specified. If the process writes something to the pipe, it will look like the data is sent from this port. If the process reads something from the pipe, it will look like the data was recieved at this port.
+* __-\-clientport__ (shorthand __-c__): Specify the client-side port. If the process writes something to the pipe, this port will represent the source of the data transfer. If the process reads something from the pipe, this port will be recorded as the destination.
 * __-\-serverport__ (shorthand __-s__): Specify the port that will represent any external process reading/writing to the target named pipe.
 
 __Commands__
@@ -35,7 +35,7 @@ To stop the capture, run the `unload` command with the same process id
 ```  
 
 ## Streaming Data (using Wireshark)
-Once the ``--load`` command has bee executed on a process, the data can be seen in real time through Wireshark
+Once the ``--load`` command has been executed on a process, the data can be seen in real time through Wireshark. Note that data will only begin to be captured once Wireshark has connected to the named pipe specified by the --output parameter.
 
 1. Open up Wireshark and go to Capture -> Interfaces
 ![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/interfaces1.png)
@@ -52,4 +52,4 @@ Once the ``--load`` command has bee executed on a process, the data can be seen 
 Data should now be streaming into Wireshark in real time!
 ![Tutorial](https://github.com/Vatyx/NamedPipeCapture/blob/master/Images/streaming1.png)
 
-#Make sure Wireshark STOPS capturing data when the DLL is unloaded from the process
+#Make sure Wireshark has stopped capturing data before the DLL is unloaded from the process.
